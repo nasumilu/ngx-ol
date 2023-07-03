@@ -11,6 +11,26 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
+    "paths": {
+      "ngx-ol-common": [
+        "dist/ngx-ol-common"
+      ],
+      "ngx-ol-image-layer": [
+        "dist/ngx-ol-image-layer"
+      ],
+      "ngx-ol-map": [
+        "dist/ngx-ol-map"
+      ],
+      "ngx-ol-layer": [
+        "dist/ngx-ol-layer"
+      ],
+      "ngx-ol-tile-layer": [
+        "dist/ngx-ol-tile-layer"
+      ],
+      "ngx-ol-vector-layer": [
+        "dist/ngx-ol-vector-layer"
+      ]
+    },
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
