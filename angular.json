@@ -3,23 +3,23 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ngx-ol-map": {
+    "ngx-ol": {
       "projectType": "library",
-      "root": "projects/ngx-ol-map",
-      "sourceRoot": "projects/ngx-ol-map/src",
-      "prefix": "ngx-ol",
+      "root": "projects/ngx-ol",
+      "sourceRoot": "projects/ngx-ol/src",
+      "prefix": "ol",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "project": "projects/ngx-ol-map/ng-package.json"
+            "project": "projects/ngx-ol/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/ngx-ol-map/tsconfig.lib.prod.json"
+              "tsConfig": "projects/ngx-ol/tsconfig.lib.prod.json"
             },
             "development": {
-              "tsConfig": "projects/ngx-ol-map/tsconfig.lib.json"
+              "tsConfig": "projects/ngx-ol/tsconfig.lib.json"
             }
           },
           "defaultConfiguration": "production"
@@ -27,50 +27,7 @@
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "tsConfig": "projects/ngx-ol-map/tsconfig.spec.json",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
-            "karmaConfig": "./karma.conf.js"
-          }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/ngx-ol-map/**/*.ts",
-              "projects/ngx-ol-map/**/*.html"
-            ]
-          }
-        }
-      }
-    },
-    "ngx-ol-image-layer": {
-      "projectType": "library",
-      "root": "projects/ngx-ol-image-layer",
-      "sourceRoot": "projects/ngx-ol-image-layer/src",
-      "prefix": "ngx-ol",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
-          "options": {
-            "project": "projects/ngx-ol-image-layer/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ngx-ol-image-layer/tsconfig.lib.prod.json"
-            },
-            "development": {
-              "tsConfig": "projects/ngx-ol-image-layer/tsconfig.lib.json"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "tsConfig": "projects/ngx-ol-image-layer/tsconfig.spec.json",
+            "tsConfig": "projects/ngx-ol/tsconfig.spec.json",
             "polyfills": [
               "zone.js",
               "zone.js/testing"
@@ -81,176 +38,8 @@
           "builder": "@angular-eslint/builder:lint",
           "options": {
             "lintFilePatterns": [
-              "projects/ngx-ol-image-layer/**/*.ts",
-              "projects/ngx-ol-image-layer/**/*.html"
-            ]
-          }
-        }
-      }
-    },
-    "ngx-ol-layer": {
-      "projectType": "library",
-      "root": "projects/ngx-ol-layer",
-      "sourceRoot": "projects/ngx-ol-layer/src",
-      "prefix": "ngx-ol",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
-          "options": {
-            "project": "projects/ngx-ol-layer/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ngx-ol-layer/tsconfig.lib.prod.json"
-            },
-            "development": {
-              "tsConfig": "projects/ngx-ol-layer/tsconfig.lib.json"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "tsConfig": "projects/ngx-ol-layer/tsconfig.spec.json",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
-          }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/ngx-ol-layer/**/*.ts",
-              "projects/ngx-ol-layer/**/*.html"
-            ]
-          }
-        }
-      }
-    },
-    "ngx-ol-common": {
-      "projectType": "library",
-      "root": "projects/ngx-ol-common",
-      "sourceRoot": "projects/ngx-ol-common/src",
-      "prefix": "ngx-ol",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
-          "options": {
-            "project": "projects/ngx-ol-common/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ngx-ol-common/tsconfig.lib.prod.json"
-            },
-            "development": {
-              "tsConfig": "projects/ngx-ol-common/tsconfig.lib.json"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "tsConfig": "projects/ngx-ol-common/tsconfig.spec.json",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
-          }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/ngx-ol-common/**/*.ts",
-              "projects/ngx-ol-common/**/*.html"
-            ]
-          }
-        }
-      }
-    },
-    "ngx-ol-tile-layer": {
-      "projectType": "library",
-      "root": "projects/ngx-ol-tile-layer",
-      "sourceRoot": "projects/ngx-ol-tile-layer/src",
-      "prefix": "ngx-ol",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
-          "options": {
-            "project": "projects/ngx-ol-tile-layer/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ngx-ol-tile-layer/tsconfig.lib.prod.json"
-            },
-            "development": {
-              "tsConfig": "projects/ngx-ol-tile-layer/tsconfig.lib.json"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "tsConfig": "projects/ngx-ol-tile-layer/tsconfig.spec.json",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
-          }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/ngx-ol-tile-layer/**/*.ts",
-              "projects/ngx-ol-tile-layer/**/*.html"
-            ]
-          }
-        }
-      }
-    },
-    "ngx-ol-vector-layer": {
-      "projectType": "library",
-      "root": "projects/ngx-ol-vector-layer",
-      "sourceRoot": "projects/ngx-ol-vector-layer/src",
-      "prefix": "lib",
-      "architect": {
-        "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
-          "options": {
-            "project": "projects/ngx-ol-vector-layer/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "projects/ngx-ol-vector-layer/tsconfig.lib.prod.json"
-            },
-            "development": {
-              "tsConfig": "projects/ngx-ol-vector-layer/tsconfig.lib.json"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "test": {
-          "builder": "@angular-devkit/build-angular:karma",
-          "options": {
-            "tsConfig": "projects/ngx-ol-vector-layer/tsconfig.spec.json",
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ]
-          }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "projects/ngx-ol-vector-layer/**/*.ts",
-              "projects/ngx-ol-vector-layer/**/*.html"
+              "projects/ngx-ol/**/*.ts",
+              "projects/ngx-ol/**/*.html"
             ]
           }
         }

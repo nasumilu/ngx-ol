@@ -12,6 +12,9 @@
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "paths": {
+      "ngx-ol": [
+        "dist/ngx-ol"
+      ],
       "ngx-ol-common": [
         "dist/ngx-ol-common"
       ],
