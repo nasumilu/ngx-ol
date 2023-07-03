@@ -15,12 +15,13 @@
         "plugin:@angular-eslint/template/process-inline-templates"
       ],
       "rules": {
+        "@typescript-eslint/quotes": ["error", "single" ],
         "@angular-eslint/directive-selector": [
           "error",
           {
-            "type": "attribute",
+            "type": "element",
             "prefix": "ol",
-            "style": "camelCase"
+            "style": "kebab-case"
           }
         ],
         "@angular-eslint/component-selector": [
