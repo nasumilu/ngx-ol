@@ -4,7 +4,7 @@ import {Projection, ProjectionLike, transform, transformExtent} from 'ol/proj';
 import {Extent} from 'ol/extent';
 import {Coordinate} from 'ol/coordinate';
 
-describe('NgxOlMapContainerComponent', () => {
+describe('NgxOlMapViewComponent', () => {
   beforeEach(() => TestBed.configureTestingModule({
     declarations: [NgxOlMapViewComponent]
   }));
@@ -332,6 +332,7 @@ describe('NgxOlMapContainerComponent', () => {
   it('check getter/setter for rotation, should not calling OnInit or ngAfterContentInit', () => {
     const fixture = TestBed.createComponent(NgxOlMapViewComponent);
     const component = fixture.componentInstance;
+    component.center = [0,0];
     component.rotation = 0;
     const ngOnInitSpy = spyOn(component, 'ngOnInit');
     const ngAfterContentInitSpy = spyOn(component, 'ngAfterContentInit');
@@ -345,6 +346,7 @@ describe('NgxOlMapContainerComponent', () => {
   it('check getter/setter for rotation, should not call OnInit or ngAfterContentInit after detectChanges', () => {
     const fixture = TestBed.createComponent(NgxOlMapViewComponent);
     const component = fixture.componentInstance;
+    component.center = [0,0];
     const ngOnInitSpy = spyOn(component, 'ngOnInit');
     const ngAfterContentInitSpy = spyOn(component, 'ngAfterContentInit');
     fixture.detectChanges();
@@ -464,6 +466,7 @@ describe('NgxOlMapContainerComponent', () => {
     const component = fixture.componentInstance;
     const ngOnInitSpy = spyOn(component, 'ngOnInit');
     const ngAfterContentInitSpy = spyOn(component, 'ngAfterContentInit');
+    component.center = [0,0];
     fixture.detectChanges();
     component.zoom = 5;
     expect(ngOnInitSpy.calls.count()).toEqual(0);

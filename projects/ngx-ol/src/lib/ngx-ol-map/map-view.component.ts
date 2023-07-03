@@ -7,10 +7,17 @@ import {NgxOlMapDirective} from './map.directive';
 import {containsCoordinate, Extent, getCenter} from 'ol/extent';
 import {createProjection, ProjectionLike, transform, transformExtent} from 'ol/proj';
 import {Coordinate} from 'ol/coordinate';
-import {filter, map, Observable, throttleTime} from 'rxjs';
+import {map, Observable, throttleTime} from 'rxjs';
 import {ObjectEvent} from 'ol/Object';
 import BaseEvent from 'ol/events/Event';
 import {parseBoolean} from '../ngx-ol-common/transform';
+import {State} from 'ol/View';
+
+export type StateEvent = {
+  target: NgxOlMapViewComponent,
+  state: State,
+  view: View
+}
 
 /**
  * @description
@@ -44,17 +51,23 @@ import {parseBoolean} from '../ngx-ol-common/transform';
 })
 export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterViewInit, OnDestroy {
 
+  #ready = new EventEmitter<NgxOlMapViewComponent>();
+  #stateChanged = new EventEmitter<StateEvent>;
   #zoomChange?: Observable<number>;
   #resolutionChange?: Observable<number>;
   #centerChange?: Observable<Coordinate>;
+  #rotationChange?: Observable<number>;
+
+  #minResolutionChange?: EventEmitter<number>;
+  #maxResolutionChange?: EventEmitter<number>;
   #minZoomChange?: EventEmitter<number>;
   #maxZoomChange?: EventEmitter<number>;
 
-  readonly #propertyChanged = new EventEmitter<ObjectEvent>();
   readonly #viewError = new EventEmitter<BaseEvent>();
   readonly #viewChanged = new EventEmitter<BaseEvent>();
 
   /**
+   * @description
    * The {@link ViewOptions} used to initialize the {@link NgxOlMapViewComponent}'s {@link View}
    * @private
    * @readonly
@@ -63,6 +76,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
   readonly #options: ViewOptions = {};
 
   /**
+   * @description
    * The {@link View}, which is instantiated in the {@link NgxOlMapViewComponent#ngOnInit}
    * @private
    * @see https://openlayers.org/en/v7.4.0/apidoc/module-ol_View-View.html
@@ -70,6 +84,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
   #view?: View;
 
   /**
+   * @description
    * The {@link NgxOlMapDirective} which this {@link NgxOlMapViewComponent}'s {@link View} is
    * applied.
    *
@@ -77,7 +92,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    */
   @ContentChild(NgxOlMapDirective) mapDirective?: NgxOlMapDirective;
 
-  constructor(private readonly ele: ElementRef) { }
+  constructor(private readonly ele: ElementRef) {
+  }
 
   /**
    * @description
@@ -99,7 +115,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    */
   set extent(value: Extent | string | undefined) {
     if (typeof value === 'string') {
-      value = value.split(',').map(parseFloat).slice(0,4);
+      value = value.split(',').map(parseFloat).slice(0, 4);
     }
     this.#options.extent = value as Extent | undefined;
     const center = this.center as Coordinate | undefined;
@@ -117,8 +133,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * projection is Spherical Mercator (the default) then minResolution defaults to
    * 40075016.68557849 / 256 / Math.pow(2, 28) = 0.0005831682455839253
    */
-  @Input({transform: parseFloat})
-  get minResolution(): number | undefined {
+  @Input()
+  get minResolution(): number | string | undefined {
     return this.#view?.getMinResolution() ?? this.#options.minResolution;
   }
 
@@ -130,12 +146,27 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set minResolution(value: number | undefined) {
+  set minResolution(value: number | undefined | string) {
+    if (typeof value === 'string') {
+      value = parseFloat(value);
+    }
     this.#options.minResolution = value;
     if (this.#view) {
       this.ngOnInit();
       this.ngAfterContentInit();
     }
+    (this.minResolutionChange as EventEmitter<number>)?.emit(value);
+  }
+
+  /**
+   * @description
+   * {@link Observable<number>} emitted when the {@link View} minimum resolution changes.
+   */
+  @Output() get minResolutionChange(): Observable<number> {
+    if (!this.#minResolutionChange) {
+      this.#minResolutionChange = new EventEmitter<number>();
+    }
+    return this.#minResolutionChange;
   }
 
   /**
@@ -145,8 +176,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * fits in a 256x256 px tile. If the projection is Spherical Mercator (the default) then maxResolution defaults to
    * 40075016.68557849 / 256 = 156543.03392804097.
    */
-  @Input({transform: parseFloat})
-  get maxResolution(): number | undefined {
+  @Input()
+  get maxResolution(): number | string | undefined {
     return this.#view?.getMaxResolution() ?? this.#options.maxResolution;
   }
 
@@ -158,12 +189,27 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set maxResolution(value: number | undefined) {
+  set maxResolution(value: number | string | undefined) {
+    if (typeof value === 'string') {
+      value = parseFloat(value);
+    }
     this.#options.maxResolution = value;
     if (this.#view) {
       this.ngOnInit();
       this.ngAfterContentInit();
     }
+    (this.maxResolutionChange as EventEmitter<number>)?.emit(value);
+  }
+
+  /**
+   * @description
+   * {@link Observable<number>} emitted when the {@link View} maximum resolution changes.
+   */
+  @Output() get maxResolutionChange(): Observable<number> {
+    if (!this.#maxResolutionChange) {
+      this.#maxResolutionChange = new EventEmitter<number>();
+    }
+    return this.#maxResolutionChange;
   }
 
   /**
@@ -191,6 +237,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     (this.minZoomChange as EventEmitter<number>).emit(value);
   }
 
+  /**
+   * @description
+   * {@link Observable<number>} emitted when the {@link View} minimum zoom changes.
+   */
   @Output() get minZoomChange(): Observable<number> {
     if (!this.#minZoomChange) {
       this.#minZoomChange = new EventEmitter<number>();
@@ -224,6 +274,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     (this.maxZoomChange as EventEmitter<number>).emit(value);
   }
 
+  /**
+   * @description
+   * {@link Observable<number>} emitted when the {@link View} maximum zoom changes.
+   */
   @Output()
   get maxZoomChange(): Observable<number> {
     if (!this.#maxZoomChange) {
@@ -237,8 +291,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Gets the constrainOnlyCenter. If true, the extent constraint will only apply to the view center and not the whole
    * extent.
    */
-  @Input({transform: parseBoolean})
-  get constrainOnlyCenter(): boolean {
+  @Input()
+  get constrainOnlyCenter(): boolean | string {
     return this.#options.constrainOnlyCenter ?? false;
   }
 
@@ -251,7 +305,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set constrainOnlyCenter(value: boolean) {
+  set constrainOnlyCenter(value: boolean | string) {
+    if (typeof value === 'string') {
+      value = value.toLowerCase() === 'true' || value === '1';
+    }
     this.#options.constrainOnlyCenter = value;
     if (this.#view) {
       this.ngOnInit();
@@ -264,8 +321,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Gets smooth extent constraint. If true, the extent constraint will be applied smoothly, i.e. allow the view to go
    * slightly outside the given extent.
    */
-  @Input({transform: parseBoolean})
-  get smoothExtentConstraint(): boolean {
+  @Input()
+  get smoothExtentConstraint(): boolean | string {
     return this.#options.smoothExtentConstraint ?? true;
   }
 
@@ -278,7 +335,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set smoothExtentConstraint(value: boolean) {
+  set smoothExtentConstraint(value: boolean | string) {
+    if (typeof value === 'string') {
+      value = value.toLowerCase() === 'true' || value === '1';
+    }
     this.#options.smoothExtentConstraint = value;
     if (this.#view) {
       this.ngOnInit();
@@ -291,8 +351,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Gets the enable rotation. If false, a rotation constraint that always sets the rotation to zero is
    * used. The constrainRotation option has no effect if enableRotation is false.
    */
-  @Input({transform: parseBoolean})
-  get enableRotation(): boolean {
+  @Input()
+  get enableRotation(): boolean | string {
     return this.#options.enableRotation ?? true;
   }
 
@@ -305,7 +365,11 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set enableRotation(value: boolean) {
+  set enableRotation(value: boolean | string) {
+    if (typeof value === 'string') {
+      value = value.toLowerCase() === 'true' || value === '1';
+    }
+
     this.#options.enableRotation = value;
     if (this.#view) {
       this.ngOnInit();
@@ -319,15 +383,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * A number constrains the rotation to that number of values. For example, 4 will constrain the rotation to 0, 90,
    * 180, and 270 degrees.
    */
-  @Input({
-    transform: (value: boolean | string | number) => {
-      if (typeof value === 'string') {
-        value = isNaN(parseInt(value)) ? value === 'true' : parseInt(value);
-      }
-      return value;
-    }
-  })
-  get constrainRotation(): boolean | number {
+  @Input()
+  get constrainRotation(): boolean | number | string {
     return this.#options.constrainRotation ?? true;
   }
 
@@ -341,7 +398,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set constrainRotation(value: number | boolean) {
+  set constrainRotation(value: number | string | boolean) {
+    if (typeof value === 'string') {
+      value = isNaN(parseInt(value)) ? value === 'true' : parseInt(value);
+    }
     this.#options.constrainRotation = value;
     if (this.#view) {
       this.ngOnInit();
@@ -355,8 +415,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * off the edge. If true the map may show multiple worlds at low zoom levels. Only used if the projection is global.
    * Note that if extent is also provided it is given precedence.
    */
-  @Input({transform: parseBoolean})
-  get multiWorld(): boolean {
+  @Input()
+  get multiWorld(): boolean | string {
     return this.#options.multiWorld ?? false;
   }
 
@@ -370,7 +430,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set multiWorld(value: boolean) {
+  set multiWorld(value: boolean | string) {
+    if (typeof value === 'string') {
+      value = value.toLowerCase() === 'true' || value === '1';
+    }
     this.#options.multiWorld = value;
     if (this.#view) {
       this.ngOnInit();
@@ -382,8 +445,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * @description
    * Gets the rotation for the view in degrees (positive rotation clockwise, 0 means North).
    */
-  @Input({transform: parseFloat})
-  get rotation(): number {
+  @Input()
+  get rotation(): number | string {
     const value = (this.#view?.getRotation() ?? 0) * 180 / Math.PI * -1;
     // wtf is negative zero (-0)
     return 0 == value ? 0 : value;
@@ -394,7 +457,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * @description
    * Sets the rotation for the view in degrees (positive rotation clockwise, 0 means North).
    */
-  set rotation(value: number) {
+  set rotation(value: number | string) {
+    if (typeof value === 'string') {
+      value = parseFloat(value);
+    }
     value = -1 * value * Math.PI / 180;
     this.#view?.setRotation(value);
     this.#options.rotation = value;
@@ -402,11 +468,24 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
 
   /**
    * @description
+   */
+  @Output()
+  get rotationChanged(): Observable<number> {
+    if (!this.#rotationChange) {
+      this.#rotationChange = this.#stateChanged.pipe(
+        map(evt => evt.state.rotation)
+      );
+    }
+    return this.#rotationChange;
+  }
+
+  /**
+   * @description
    * Get the resolution constraint. If true, the view will always animate to the closest zoom level after an interaction;
    * false means intermediary zoom levels are allowed.
    */
-  @Input({transform: parseBoolean})
-  get constrainResolution(): boolean {
+  @Input()
+  get constrainResolution(): boolean | string {
     return this.#options.constrainResolution ?? false;
   }
 
@@ -419,7 +498,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set constrainResolution(value: boolean) {
+  set constrainResolution(value: boolean | string) {
+    if (typeof value === 'string') {
+      value = value.toLowerCase() === 'true' || value === '1';
+    }
     this.#view?.setConstrainResolution(value);
     this.#options.constrainResolution = value;
   }
@@ -429,8 +511,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Gets smooth resolution constraint. If true, the resolution min/max values will be applied smoothly, i.e. allow the
    * view to exceed slightly the given resolution or zoom bounds.
    */
-  @Input({transform: parseBoolean})
-  get smoothResolutionConstraint(): boolean {
+  @Input()
+  get smoothResolutionConstraint(): boolean | string {
     return this.#options.smoothResolutionConstraint ?? true;
   }
 
@@ -443,7 +525,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set smoothResolutionConstraint(value: boolean) {
+  set smoothResolutionConstraint(value: boolean | string) {
+    if (typeof value === 'string') {
+      value = value.toLowerCase() === 'true' || value === '1';
+    }
     this.#options.smoothResolutionConstraint = value;
     if (this.#view) {
       this.ngOnInit();
@@ -455,8 +540,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * @description
    * Gets the projection. The default is Spherical Mercator.
    */
-  @Input()
-  get projection(): ProjectionLike {
+  @Input() get projection(): ProjectionLike {
     return this.#view?.getProjection() ?? this.#options.projection;
   }
 
@@ -524,12 +608,14 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     this.#options.resolution = value;
   }
 
+  /**
+   * @description
+   * {@link Observable<number} when the {@link View} resolution changes.
+   */
   @Output() get resolutionChange(): Observable<number> {
     if (!this.#resolutionChange) {
-      this.#resolutionChange = this.#propertyChanged.pipe(
-        throttleTime(100),
-        filter(evt => evt.key === 'resolution'),
-        map(evt => evt.target.getResolution())
+      this.#resolutionChange = this.stateChanged.pipe(
+        map(evt => evt.state.resolution)
       );
     }
     return this.#resolutionChange;
@@ -558,17 +644,18 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     this.#options.center = value;
   }
 
+  /**
+   * @description
+   * {@link Observable<number>} emitted when the {@link View}'s center changes.
+   */
   @Output() get centerChange(): Observable<Coordinate> {
     if (!this.#centerChange) {
-      this.#centerChange = this.#propertyChanged.pipe(
-        throttleTime(100),
-        filter(evt => evt.key === 'center'),
-        map(evt => evt.target.getCenter())
+      this.#centerChange = this.stateChanged.pipe(
+        map(evt => evt.state.center)
       );
     }
     return this.#centerChange;
   }
-
 
   /**
    * @description
@@ -593,12 +680,14 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     this.#options.zoom = value;
   }
 
+  /**
+   * @description
+   * {@link Observable<number>} emitted when the {@link View} zoom changes.
+   */
   @Output() get zoomChange(): Observable<number> {
     if (!this.#zoomChange) {
-      this.#zoomChange = this.#propertyChanged.pipe(
-        throttleTime(100),
-        filter(evt => evt.key === 'resolution'),
-        map(evt => evt.target.getZoom())
+      this.#zoomChange = this.stateChanged.pipe(
+        map(evt => evt.state.zoom)
       );
     }
     return this.#zoomChange;
@@ -670,23 +759,39 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     return this.#viewChanged;
   }
 
+  @Output()
+  get stateChanged(): Observable<StateEvent> {
+    return this.#stateChanged.pipe(
+      throttleTime(100)
+    );
+  }
+
+  @Output()
+  get ready(): Observable<NgxOlMapViewComponent> {
+    return this.#ready;
+  }
+
+  #fireStateChange(evt: ObjectEvent): void {
+    try {
+      this.#stateChanged.emit({
+        target: this,
+        state: evt.target.getState(),
+        view: this.#view as View
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   /**
-   * @description
-   * Lifecycle hook which performs:
-   *
-   * 1. Instantiates the {@link View}
-   * 2. Add 'propertychange' listener observed by the {@link NgxOlMapViewComponent#propertyChanged} property
-   *
    * @internal
    */
   ngOnInit(): void {
-    // 1. Init View
     this.#view = new View(this.#options);
-
-    // 2. Adds a propertychange listener to the view
-    this.#view.on('propertychange', EventEmitter.prototype.emit.bind(this.#propertyChanged));
+    this.#view?.on('propertychange', this.#fireStateChange.bind(this));
     this.#view.on('error', EventEmitter.prototype.emit.bind(this.#viewError));
     this.#view.on('change', EventEmitter.prototype.emit.bind(this.#viewChanged));
+    this.#ready.emit(this);
   }
 
   /**
@@ -721,19 +826,12 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
   }
 
   /**
-   * @description
-   * Lifecycle hook which performs:
-   *
-   * 1. Sets the view to undefined
-   * 2. Sets the wrapped {@link View} to undefined
+   * @internal
    */
   ngOnDestroy(): void {
-    // 1. un-listens to the change:(center|resolution|rotation) view events
-    this.#view?.un('propertychange', EventEmitter.prototype.emit.bind(this.#propertyChanged));
+    this.#view?.un('propertychange', this.#fireStateChange.bind(this));
     this.#view?.un('error', EventEmitter.prototype.emit.bind(this.#viewError));
     this.#view?.un('change', EventEmitter.prototype.emit.bind(this.#viewChanged));
-
-    // 2. Unset the #view
     this.#view = undefined;
   }
 }
