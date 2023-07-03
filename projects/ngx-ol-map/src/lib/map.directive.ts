@@ -21,6 +21,8 @@ export class NgxOlMapDirective extends Map implements OnInit, AfterContentInit, 
   readonly #mapEvent = new EventEmitter<MapBrowserEvent<MouseEvent>>();
   readonly #mapError = new EventEmitter<BaseEvent>();
 
+  @Output() readonly ready = new EventEmitter<NgxOlMapDirective>();
+
   @ContentChildren(NgxOlLayerProviderDirective) ngxLayerProviders!: QueryList<NgxOlLayerProviderDirective<never, never, never>>;
 
   constructor() {
@@ -78,6 +80,8 @@ export class NgxOlMapDirective extends Map implements OnInit, AfterContentInit, 
 
     // map changed
     this.on('change', EventEmitter.prototype.emit.bind(this.#mapChanged));
+
+    this.ready.emit(this);
   }
 
   ngAfterContentInit(): void {
