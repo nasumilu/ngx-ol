@@ -14,8 +14,7 @@ import BaseEvent from 'ol/events/Event';
 
 /**
  * @description
- * This is the container for an OpenLayers Map, which basically provides Angular input binding for a
- * {@link View}.
+ * This is the container for an OpenLayers Map, which basically wraps a {@link View} in an Angular component.
  *
  * @example
  * // basic example, the center and zoom or resolution is required
@@ -86,8 +85,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Sets extent that constrains the view, in other words, nothing outside of this extent can be visible on the map.
    */
   @Input()
-  get extent(): Extent {
-    return this.#options.extent ?? this.#view?.getProjection().getExtent() ?? [];
+  get extent(): Extent | string | undefined {
+    return this.#options.extent ?? this.#view?.getProjection().getExtent();
   }
 
   /**
@@ -98,9 +97,12 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set extent(value: Extent) {
-    this.#options.extent = value;
-    const center = this.center;
+  set extent(value: Extent | string | undefined) {
+    if (typeof value === 'string') {
+      value = value.split(',').map(parseFloat).slice(0,4);
+    }
+    this.#options.extent = value as Extent | undefined;
+    const center = this.center as Coordinate | undefined;
     if (this.#view) {
       this.#options.center = value && center && !containsCoordinate(value, center) ? getCenter(value) : center;
       this.ngOnInit();
@@ -539,8 +541,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * with the projection option. Layer sources will not be fetched if this is not set, but the center can be set later.
    */
   @Input()
-  get center(): Coordinate {
-    return this.#view?.getCenter() ?? this.#options.center ?? [0,0];
+  get center(): Coordinate | string | undefined {
+    return this.#view?.getCenter() ?? this.#options.center;
   }
 
   /**
@@ -548,7 +550,10 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Gets the center for the view. If a user projection is not set, the coordinate system for the center is specified
    * with the projection option. Layer sources will not be fetched if this is not set, but the center can be set later.
    */
-  set center(value: Coordinate) {
+  set center(value: Coordinate | string | undefined) {
+    if (typeof value === 'string') {
+      value = value.split(',').map(parseFloat);
+    }
     this.#view?.setCenter(value);
     this.#options.center = value;
   }
@@ -571,8 +576,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * view.
    */
   @Input()
-  get zoom(): number | string {
-    return this.#view?.getZoom() ?? this.#options.zoom ?? 0;
+  get zoom(): number | string | undefined {
+    return this.#view?.getZoom() ?? this.#options.zoom;
   }
 
   /**
@@ -580,11 +585,11 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    * Sets the zoom, only used if resolution is not defined. Zoom level used to calculate the initial resolution for the
    * view.
    */
-  set zoom(value: number | string) {
+  set zoom(value: number | string | undefined) {
     if (typeof value === 'string') {
       value = parseFloat(value);
     }
-    this.#view?.setZoom(value ?? 0);
+    this.#view?.setZoom(value ?? NaN);
     this.#options.zoom = value;
   }
 
@@ -705,13 +710,6 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
   }
 
   /**
-   * @description
-   * Lifecycle hook which performs:
-   *
-   * 1. Sets the maps target.
-   *
-   * @see NgxOlMapDirective#setTarget
-   *
    * @internal
    */
   ngAfterViewInit(): void {
@@ -719,8 +717,6 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
       this.ele.nativeElement.firstChild.tabIndex = this.ele.nativeElement.tabIndex;
       this.ele.nativeElement.tabIndex = -1;
     }
-
-    // 1. Set the maps target
     this.mapDirective?.setTarget(this.ele.nativeElement.firstChild);
   }
 
