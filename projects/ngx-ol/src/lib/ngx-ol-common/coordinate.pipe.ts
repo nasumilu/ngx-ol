@@ -63,7 +63,7 @@ export const COORDINATE_FORMATTER = new InjectionToken<CoordinateFormatter>('Coo
  *
  *  Expected Output: -10722552.699340, 5572230.177360
  *
- *  {{ [-28069840, 2727399] | transform: 'EPSG:3857': 'EPSG:4326' | coordinate: 'dms' }}
+ *  {{ [-28069840, 2727399] | transform: 'EPSG:4326' | coordinate: 'dms' }}
  *
  *  The coordinate is first transformed to WGS-84 before formatting to degree, minutes, and seconds
  *  Expected Output: 23° 47′ 11″ N 107° 50′ 40″ E
