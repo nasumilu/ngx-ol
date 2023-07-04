@@ -1,7 +1,6 @@
 import { TransformPipe } from './transform.pipe';
-import {transform} from "ol/proj";
-import {core} from "@angular/compiler";
-import {Coordinate} from "ol/coordinate";
+import {transform} from 'ol/proj';
+import {Coordinate} from 'ol/coordinate';
 
 describe('TransformPipe', () => {
   it('create an instance', () => {
