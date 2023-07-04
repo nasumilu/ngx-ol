@@ -1,5 +1,15 @@
 import {
-  AfterContentInit, AfterViewInit, Component, ContentChild, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output
+  AfterContentInit,
+  AfterViewInit,
+  Component,
+  ContentChild,
+  ElementRef,
+  EventEmitter, Inject,
+  InjectionToken,
+  Input,
+  OnDestroy,
+  OnInit, Optional,
+  Output
 } from '@angular/core';
 import {ViewOptions} from 'ol/View';
 import {View} from 'ol';
@@ -7,17 +17,24 @@ import {NgxOlMapDirective} from './map.directive';
 import {containsCoordinate, Extent, getCenter} from 'ol/extent';
 import {createProjection, ProjectionLike, transform, transformExtent} from 'ol/proj';
 import {Coordinate} from 'ol/coordinate';
-import {map, Observable, throttleTime} from 'rxjs';
+import {map, Observable, SchedulerLike, ThrottleConfig, throttleTime} from 'rxjs';
 import {ObjectEvent} from 'ol/Object';
 import BaseEvent from 'ol/events/Event';
 import {parseBoolean} from '../ngx-ol-common/transform';
 import {State} from 'ol/View';
 
-export type StateEvent = {
+export interface StateEvent {
   target: NgxOlMapViewComponent,
-  state: State,
-  view: View
+  state: State
 }
+
+export interface StateChangeThrottle {
+  duration: number,
+  scheduler?: SchedulerLike,
+  config?: ThrottleConfig
+}
+
+export const STATE_CHANGE_THROTTLE = new InjectionToken<StateChangeThrottle>('StateChangeThrottleToken');
 
 /**
  * @description
@@ -92,7 +109,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    */
   @ContentChild(NgxOlMapDirective) mapDirective?: NgxOlMapDirective;
 
-  constructor(private readonly ele: ElementRef) {
+  constructor(private readonly ele: ElementRef,
+              @Optional() @Inject(STATE_CHANGE_THROTTLE) private readonly stateChangeThrottle?: StateChangeThrottle) {
   }
 
   /**
@@ -761,9 +779,12 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
 
   @Output()
   get stateChanged(): Observable<StateEvent> {
-    return this.#stateChanged.pipe(
-      throttleTime(100)
-    );
+    if (this.stateChangeThrottle) {
+      return this.#stateChanged.pipe(
+        throttleTime(this.stateChangeThrottle.duration, this.stateChangeThrottle.scheduler, this.stateChangeThrottle.config)
+      );
+    }
+    return this.#stateChanged;
   }
 
   @Output()
@@ -775,8 +796,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     try {
       this.#stateChanged.emit({
         target: this,
-        state: evt.target.getState(),
-        view: this.#view as View
+        state: evt.target.getState()
       });
     } catch (error) {
       console.error(error);
@@ -792,6 +812,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     this.#view.on('error', EventEmitter.prototype.emit.bind(this.#viewError));
     this.#view.on('change', EventEmitter.prototype.emit.bind(this.#viewChanged));
     this.#ready.emit(this);
+    this.#view.dispatchEvent('propertychange');
   }
 
   /**
