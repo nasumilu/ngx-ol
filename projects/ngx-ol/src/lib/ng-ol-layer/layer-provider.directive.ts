@@ -1,3 +1,20 @@
+/*
+ * Copyright 2023 Michael Lucas <nasumilu.@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 import {Layer} from 'ol/layer';
 import {Options} from 'ol/layer/Layer';
 import {Source} from 'ol/source';
@@ -16,15 +33,10 @@ export class NgxOlLayerProviderDirective<L extends Layer, S extends Source, O ex
 
   readonly #renderStatus = new EventEmitter<RenderEvent>();
   readonly #propertyChanged = new EventEmitter<ObjectEvent>();
-  readonly #layerChanged = new EventEmitter<BaseEvent>();
   readonly #layerError = new EventEmitter<BaseEvent>();
 
   protected _layer?: L;
   protected readonly _options = {} as O;
-
-  @Output() get layerChanged(): Observable<BaseEvent> {
-    return this.#layerChanged;
-  }
 
   @Output() get layerError(): Observable<BaseEvent> {
     return this.#layerError;
@@ -169,7 +181,6 @@ export class NgxOlLayerProviderDirective<L extends Layer, S extends Source, O ex
     this._layer?.on('propertychange', EventEmitter.prototype.emit.bind(this.#propertyChanged));
     this._layer?.on('postrender', EventEmitter.prototype.emit.bind(this.#renderStatus));
     this._layer?.on('prerender', EventEmitter.prototype.emit.bind(this.#renderStatus));
-    this._layer?.on('change', EventEmitter.prototype.emit.bind(this.#layerChanged));
     this._layer?.on('error', EventEmitter.prototype.emit.bind(this.#layerError));
   }
 
@@ -177,7 +188,6 @@ export class NgxOlLayerProviderDirective<L extends Layer, S extends Source, O ex
     this._layer?.un('propertychange', EventEmitter.prototype.emit.bind(this.#propertyChanged));
     this._layer?.un('postrender', EventEmitter.prototype.emit.bind(this.#renderStatus));
     this._layer?.un('prerender',  EventEmitter.prototype.emit.bind(this.#renderStatus));
-    this._layer?.un('change',  EventEmitter.prototype.emit.bind(this.#layerChanged));
     this._layer?.un('error',  EventEmitter.prototype.emit.bind(this.#layerError));
     this._layer = undefined;
   }

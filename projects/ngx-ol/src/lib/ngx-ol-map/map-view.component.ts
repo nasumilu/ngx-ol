@@ -359,8 +359,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     }
     this.#options.smoothExtentConstraint = value;
     if (this.#view) {
-      this.ngOnInit();
-      this.ngAfterContentInit();
+      this.#viewInit();
     }
   }
 
@@ -549,8 +548,7 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     }
     this.#options.smoothResolutionConstraint = value;
     if (this.#view) {
-      this.ngOnInit();
-      this.ngAfterContentInit();
+      this.#viewInit();
     }
   }
 
@@ -803,6 +801,13 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     }
   }
 
+  #viewInit(): void {
+    this.#options.center = this.#view?.getCenter();
+    this.#options.resolution = this.#view?.getResolution();
+    this.ngOnInit();
+    this.ngAfterContentInit();
+  }
+
   /**
    * @internal
    */
@@ -812,7 +817,6 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
     this.#view.on('error', EventEmitter.prototype.emit.bind(this.#viewError));
     this.#view.on('change', EventEmitter.prototype.emit.bind(this.#viewChanged));
     this.#ready.emit(this);
-    this.#view.dispatchEvent('propertychange');
   }
 
   /**
