@@ -1,7 +1,6 @@
 import {AfterContentInit, ContentChild, Directive, Input} from '@angular/core';
 import BaseVectorLayer from 'ol/layer/BaseVector';
 import VectorSource from 'ol/source/Vector';
-import CanvasVectorLayerRenderer from 'ol/renderer/canvas/VectorLayer';
 import {Options} from 'ol/layer/BaseVector';
 import {NgxOlBaseVectorSourceProviderDirective} from './base-vector-source-provider.directive';
 import {StyleLike} from 'ol/style/Style';
@@ -11,8 +10,8 @@ import {NgxOlLayerProviderDirective} from '../ng-ol-layer/layer-provider.directi
 @Directive({
   selector: 'ol-base-vector-layer'
 })
-export class NgxOlBaseVectorLayerProviderDirective<L extends BaseVectorLayer<S, CanvasVectorLayerRenderer>, S extends VectorSource>
-  extends NgxOlLayerProviderDirective<L, S, Options<S>> implements AfterContentInit {
+export class NgxOlBaseVectorLayerProviderDirective<L extends BaseVectorLayer<S, any>, S extends VectorSource>
+  extends NgxOlLayerProviderDirective<L, Options<S>> implements AfterContentInit {
 
   @ContentChild(NgxOlBaseVectorSourceProviderDirective) sourceProvider?: NgxOlBaseVectorSourceProviderDirective<S, never>;
 

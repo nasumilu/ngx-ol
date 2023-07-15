@@ -1,21 +1,39 @@
-import {EnvironmentProviders, ModuleWithProviders, NgModule, Provider} from '@angular/core';
+/*
+ * Copyright 2023 Michael Lucas <nasumilu.@gmail.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+import {EnvironmentProviders, ModuleWithProviders, NgModule, Provider, Type} from '@angular/core';
 import {
   NgxOlMapViewComponent,
-  STATE_CHANGE_THROTTLE,
-  StateChangeThrottle
+  NGX_OL_STATE_CHANGE_THROTTLE, StateChangeThrottle,
 } from './map-view.component';
 import {NgxOlMapDirective} from './map.directive';
 import {NgxOlLayerModule} from '../ng-ol-layer/layer.module';
-import proj4 from 'proj4';
-import {register} from 'ol/proj/proj4';
 import {NgxOlMapService} from './map.service';
+import {
+  NGX_OL_PROJECTION_DEF,
+  NgxOlProjectionDefinition, NgxOlProjectionLookupProvider,
+  NgxOlProjectionService
+} from './projection.service';
 
-export type ProjectionDefintion = { name: string, projection: string }
 
 export type NgxOlModuleConfig = {
   stateChangeThrottle?: StateChangeThrottle,
-  registerProj4?: boolean,
-  projectionDefs?:  ProjectionDefintion[]
+  projectionDefs?: NgxOlProjectionDefinition[],
+  projectionLookupProvider?: Type<NgxOlProjectionLookupProvider>
 };
 
 @NgModule({
@@ -30,28 +48,28 @@ export type NgxOlModuleConfig = {
     NgxOlMapViewComponent,
     NgxOlMapDirective
   ],
-  providers: [NgxOlMapService]
+  providers: [NgxOlMapService, NgxOlProjectionService]
 })
 export class NgxOlMapModule {
 
   static withConfig(options: NgxOlModuleConfig): ModuleWithProviders<NgxOlMapModule> {
-    const providers: (Provider | EnvironmentProviders)[] = [NgxOlMapService];
+    const providers: (Provider | EnvironmentProviders)[] = [];
 
     if (options.stateChangeThrottle) {
-      providers.push({provide: STATE_CHANGE_THROTTLE, useValue: options.stateChangeThrottle});
-    }
-
-    if (options.registerProj4) {
-      register(proj4);
+      providers.push({provide: NGX_OL_STATE_CHANGE_THROTTLE, useValue: options.stateChangeThrottle});
     }
 
     if (options.projectionDefs) {
-      options.projectionDefs.forEach(projectDef => {
-        proj4.defs(projectDef.name, projectDef.projection);
-      });
-      register(proj4);
+      providers.push(
+        options.projectionDefs.map(def =>
+          ({provide: NGX_OL_PROJECTION_DEF, multi: true, useValue: def})
+        )
+      );
     }
 
+    if (options.projectionLookupProvider) {
+      providers.push({provide: NgxOlProjectionLookupProvider, useClass: options.projectionLookupProvider});
+    }
     return {
       ngModule: NgxOlMapModule,
       providers

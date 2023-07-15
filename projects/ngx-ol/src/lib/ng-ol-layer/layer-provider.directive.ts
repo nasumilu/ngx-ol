@@ -14,10 +14,6 @@
  * limitations under the License.
  *
  */
-
-import {Layer} from 'ol/layer';
-import {Options} from 'ol/layer/Layer';
-import {Source} from 'ol/source';
 import {AfterContentInit, Directive, EventEmitter, Input, OnDestroy, Output} from '@angular/core';
 import {Extent} from 'ol/extent';
 import {Observable} from 'rxjs';
@@ -25,10 +21,12 @@ import RenderEvent from 'ol/render/Event';
 import {ObjectEvent} from 'ol/Object';
 import BaseEvent from 'ol/events/Event';
 import {parseBoolean, parseNumericCsv} from '../ngx-ol-common/transform';
+import {BackgroundColor, Options as BaseOptions} from 'ol/layer/Base';
+import Layer, {Options} from 'ol/layer/Layer';
 
 
 @Directive({selector: 'ol-layer'})
-export class NgxOlLayerProviderDirective<L extends Layer, S extends Source, O extends Options<S>>
+export class NgxOlLayerProviderDirective<L extends Layer, O extends Options & BaseOptions>
   implements AfterContentInit, OnDestroy {
 
   readonly #renderStatus = new EventEmitter<RenderEvent>();
@@ -48,6 +46,17 @@ export class NgxOlLayerProviderDirective<L extends Layer, S extends Source, O ex
 
   @Output() get propertyChanged(): Observable<ObjectEvent> {
     return this.#propertyChanged;
+  }
+
+  @Input()
+  get background(): BackgroundColor | undefined {
+    const background = this._layer?.getBackground();
+    return (false === background ? undefined : background) ?? this._options.background;
+  }
+
+  set background(value: BackgroundColor | undefined) {
+    this._layer?.setBackground()
+    this._options.background = value;
   }
 
   @Input() get class(): string {

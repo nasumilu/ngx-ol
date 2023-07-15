@@ -23,6 +23,7 @@ import {
   toXYStringFactory
 } from './coordinate.pipe';
 import { TransformPipe } from './transform.pipe';
+import { NgxOlEPSGCodePipe } from './epsg-code.pipe';
 
 /**
  * Exports the required pipes and directives commonly used among the NgxOl library.
@@ -30,12 +31,14 @@ import { TransformPipe } from './transform.pipe';
 @NgModule({
   declarations: [
     CoordinatePipe,
-    TransformPipe
+    TransformPipe,
+    NgxOlEPSGCodePipe
   ],
   imports: [],
   exports: [
     CoordinatePipe,
-    TransformPipe
+    TransformPipe,
+    NgxOlEPSGCodePipe
   ],
   providers: [
     {provide: COORDINATE_FORMATTER, multi: true, useFactory: toXYStringFactory},

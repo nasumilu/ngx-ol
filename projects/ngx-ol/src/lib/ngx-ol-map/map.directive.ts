@@ -32,7 +32,7 @@ export class NgxOlMapDirective extends Map implements OnInit, AfterContentInit, 
 
   @Output() readonly ready = new EventEmitter<NgxOlMapDirective>();
 
-  @ContentChildren(NgxOlLayerProviderDirective) ngxLayerProviders!: QueryList<NgxOlLayerProviderDirective<never, never, never>>;
+  @ContentChildren(NgxOlLayerProviderDirective) ngxLayerProviders!: QueryList<NgxOlLayerProviderDirective<never, never>>;
 
   constructor(private readonly mapService: NgxOlMapService) {
     super();

@@ -1,27 +1,20 @@
 import {
-  AfterContentInit,
-  AfterViewInit,
-  Component,
-  ContentChild,
-  ElementRef,
-  EventEmitter, Inject,
-  InjectionToken,
-  Input,
-  OnDestroy,
-  OnInit, Optional,
-  Output
+  AfterContentInit, AfterViewInit, Component, ContentChild,
+  ElementRef, EventEmitter, Inject, InjectionToken,
+  Input, OnDestroy, OnInit, Optional, Output
 } from '@angular/core';
-import {ViewOptions} from 'ol/View';
+import {State, ViewOptions} from 'ol/View';
 import {View} from 'ol';
 import {NgxOlMapDirective} from './map.directive';
 import {containsCoordinate, Extent, getCenter} from 'ol/extent';
-import {createProjection, ProjectionLike, transform, transformExtent} from 'ol/proj';
+import {ProjectionLike, transform, transformExtent} from 'ol/proj';
 import {Coordinate} from 'ol/coordinate';
-import {map, Observable, SchedulerLike, ThrottleConfig, throttleTime} from 'rxjs';
+import {first, map, Observable, SchedulerLike, ThrottleConfig, throttleTime} from 'rxjs';
 import {ObjectEvent} from 'ol/Object';
 import BaseEvent from 'ol/events/Event';
 import {parseBoolean} from '../ngx-ol-common/transform';
-import {State} from 'ol/View';
+import {NgxOlProjectionService} from './projection.service';
+
 
 export interface StateEvent {
   target: NgxOlMapViewComponent,
@@ -34,7 +27,8 @@ export interface StateChangeThrottle {
   config?: ThrottleConfig
 }
 
-export const STATE_CHANGE_THROTTLE = new InjectionToken<StateChangeThrottle>('StateChangeThrottleToken');
+
+export const NGX_OL_STATE_CHANGE_THROTTLE = new InjectionToken<StateChangeThrottle>('StateChangeThrottleToken');
 
 /**
  * @description
@@ -110,7 +104,8 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
   @ContentChild(NgxOlMapDirective) mapDirective?: NgxOlMapDirective;
 
   constructor(private readonly ele: ElementRef,
-              @Optional() @Inject(STATE_CHANGE_THROTTLE) private readonly stateChangeThrottle?: StateChangeThrottle) {
+              private readonly projectionService: NgxOlProjectionService,
+              @Optional() @Inject(NGX_OL_STATE_CHANGE_THROTTLE) private readonly stateChangeThrottle?: StateChangeThrottle) {
   }
 
   /**
@@ -568,35 +563,40 @@ export class NgxOlMapViewComponent implements OnInit, AfterContentInit, AfterVie
    *
    * > Setting this value after the initial detect changes will instantiate a new {@link View}.
    */
-  set projection(value: ProjectionLike) {
-    value = createProjection(value, 'EPSG:3857');
-    this.#options.projection = value;
+  set projection(code: ProjectionLike) {
+    this.projectionService.findByCode(code)
+      .pipe(first())
+      .subscribe(value => {
+        this.#options.projection = value ?? undefined;
 
-    if (this.#view) {
+        if (this.#view && value) {
 
-      if (this.#options.zoom) {
-        this.#options.zoom = this.#view.getZoom();
-      }
+          if (this.#options.zoom) {
+            this.#options.zoom = this.#view.getZoom();
+          }
 
-      if (this.#options.resolution) {
-        this.#options.resolution = this.#view.getResolution();
-      }
+          if (this.#options.resolution) {
+            this.#options.resolution = this.#view.getResolution();
+          }
 
-      let center = this.#view.getCenter();
-      const projection = this.#view.getProjection();
+          const center = this.#view.getCenter() ?? this.#options.center;
+          const projection = this.#view.getProjection();
+          this.#options.center = center ? transform(center, projection, value) : undefined;
 
-      if (this.#options.extent) {
-        this.#options.extent = transformExtent(this.#options.extent, projection, value);
-      }
+          const extent = value.getExtent();
 
-      if (center) {
-        center = transform(center, projection, value);
-        this.#options.center = containsCoordinate(value.getExtent(), center) ? center : value.getExtent();
-      }
+          if (extent && this.#options.center && !containsCoordinate(extent, this.#options.center)) {
+            this.#options.center = getCenter(extent);
+          }
 
-      this.ngOnInit();
-      this.ngAfterContentInit();
-    }
+          if (this.#options.extent) {
+            this.#options.extent = transformExtent(this.#options.extent, projection, value);
+          }
+
+          this.ngOnInit();
+          this.ngAfterContentInit();
+        }
+      });
   }
 
   /**

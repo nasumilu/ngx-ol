@@ -3,15 +3,14 @@ import {NgxOlTileSourceProviderDirective} from './tile-source-provider.directive
 import BaseTileLayer from 'ol/layer/BaseTile';
 import TileSource from 'ol/source/Tile';
 import {Options} from 'ol/layer/BaseTile';
-import CanvasTileLayerRenderer from 'ol/renderer/canvas/TileLayer';
 import {parseBoolean} from '../ngx-ol-common/transform';
 import {NgxOlLayerProviderDirective} from '../ng-ol-layer/layer-provider.directive';
 
 @Directive({
   selector: 'ol-base-tile-layer'
 })
-export class NgxOlBaseTileLayerProviderDirective<L extends BaseTileLayer<S, CanvasTileLayerRenderer>, S extends TileSource>
-  extends NgxOlLayerProviderDirective<L, S, Options<S>> implements AfterContentInit {
+export class NgxOlBaseTileLayerProviderDirective<L extends BaseTileLayer<S, any>, S extends TileSource>
+  extends NgxOlLayerProviderDirective<L, Options<S>> implements AfterContentInit {
 
   @ContentChild(NgxOlTileSourceProviderDirective) sourceProvider?: NgxOlTileSourceProviderDirective<S, never> ;
 
